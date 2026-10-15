@@ -1,0 +1,45 @@
+# ===== Java =====
+*.class
+*.jar
+*.war
+*.ear
+*.log
+build/
+out/
+target/
+.cache/
+
+# ===== Node / Web =====
+node_modules/
+dist/
+dist-ssr/
+*.local
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ===== Editors & IDEs =====
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ===== Python =====
+__pycache__/
+*.pyc
+*.pyo
+
+# ===== Misc =====
+*.tmp
+*.bak
+.env
+.env.local

@@ -14,7 +14,7 @@ A high-performance network packet analyzer and Deep Packet Inspection (DPI) suit
 
 **Java Core Engine** · **Browser-Side PCAP Parser** · **Interactive Web Studio** · **Drag-and-Drop Upload**
 
-[Quick Start](#-quick-start) · [How It Works](#-how-it-works--technical-deep-dive) · [Web Studio](#%EF%B8%8F-web-studio) · [Architecture](#-architecture) · [Interview Guide](#-interview-preparation-guide) · [Troubleshooting](#-troubleshooting)
+[Quick Start](#-quick-start) · [How It Works](#-how-it-works--technical-deep-dive) · [Web Studio](#%EF%B8%8F-web-studio) · [Screenshots](#-screenshots--demo) · [Architecture](#-architecture) · [Interview Guide](#-interview-preparation-guide) · [Troubleshooting](#-troubleshooting)
 
 </div>
 
@@ -307,6 +307,27 @@ The interactive dashboard provides **Wireshark-grade packet inspection entirely 
 - **Typography**: Inter (UI), JetBrains Mono (code/hex), Outfit (headings) — loaded via Google Fonts
 - **Glass morphism**: Frosted-glass panels using `backdrop-filter: blur()` and semi-transparent backgrounds
 - **Iconography**: Lucide React icon library (tree-shakeable, MIT-licensed)
+
+---
+
+## 📸 Screenshots & Demo
+
+<details open>
+<summary><strong>Click to view project screenshots</strong></summary>
+
+### Full Dashboard — KPI Metrics, Service Chips & Packet Table
+> The main Web Studio dashboard showing 77 captured packets, 1.59 KB of inspected payload, 17 classified services, TCP/UDP split (73/4), and 5 SYN flood security alerts. Service chips display identified applications including Twitter/X, Google, YouTube, Facebook, Instagram, Amazon, GitHub, Discord, and more.
+
+![Full Dashboard](screenshots/01_full_dashboard.png)
+
+---
+
+### Deep Packet Inspector — TLS SNI & Protocol Tree
+> Selecting a TLS Client Hello packet (Packet #4) opens the Deep Inspector panel, revealing the Layer-7 DPI results: identified service application (Google) with TLS SNI hostname (www.google.com), TCP layer details (source/destination ports, flags), and IPv4 header information (TTL=64). The packet table shows the full TCP three-way handshake (SYN → SYN-ACK → ACK) followed by the TLS Client Hello.
+
+![Dashboard with Inspector](screenshots/02_dashboard_inspector.png)
+
+</details>
 
 ---
 

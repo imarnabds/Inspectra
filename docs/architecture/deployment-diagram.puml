@@ -1,0 +1,54 @@
+@startuml
+!theme plain
+title Inspectra - Deployment Diagram
+
+node "Host Operating System (Windows / Linux / macOS)" {
+    folder "Storage Artifacts" {
+        file "test_dpi.pcap" as PCAP_Raw
+        file "filtered.pcap" as PCAP_Out
+        file "blocking_rules.txt" as RulesFile
+    }
+
+    node "Java Runtime Environment (JDK 17+ / 21)" {
+        artifact "Inspectra Java CLI (com.inspectra.Main)" as JavaApp
+    }
+
+    node "C++ Native Core Process" {
+        artifact "DPI Engine (dpi_engine / dpi_mt)" as CPPApp {
+            component "1x Reader Thread" as RThread
+            component "2x Load Balancers" as LBThread
+            component "4x FastPath Workers" as FPThread
+        }
+        database "ConnectionTracker (max 100k flows)" as FlowTable
+        database "RuleManager Store (shared_mutex)" as RuleStore
+    }
+
+    node "Web Dev Server (Node.js / Vite 8)" {
+        artifact "Vite HTTP Server (Port 5174)" as WebServer
+    }
+
+    node "Web Browser Environment" {
+        artifact "Inspectra Web Studio (React 19 + TypeScript)" as BrowserApp {
+            component "pcapParser.ts (Binary Dissector)" as TSDissector
+            database "InspectraDB In-Memory Store" as InMemDB
+            component "Wireshark-Grade UI Dashboard" as UI
+        }
+    }
+}
+
+PCAP_Raw --> JavaApp
+PCAP_Raw --> RThread
+PCAP_Raw ..> TSDissector : Drag & Drop
+
+RThread --> LBThread
+LBThread --> FPThread
+FPThread <--> FlowTable
+FPThread <--> RuleStore
+RulesFile <--> RuleStore
+FPThread --> PCAP_Out
+
+WebServer --> BrowserApp : serves bundle
+TSDissector --> InMemDB
+InMemDB --> UI
+
+@enduml

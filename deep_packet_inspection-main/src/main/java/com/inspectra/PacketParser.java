@@ -1,4 +1,4 @@
-package com.packetanalyzer;
+package com.inspectra;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

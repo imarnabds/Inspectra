@@ -1,3 +1,7 @@
+/**
+ * Inspectra PCAP Dissector Engine
+ * Browser-side binary PCAP parser decoding L2 Ethernet, L3 IPv4, L4 TCP/UDP, and L7 DPI metadata.
+ */
 export interface PacketData {
   id: number;
   timestamp: string;

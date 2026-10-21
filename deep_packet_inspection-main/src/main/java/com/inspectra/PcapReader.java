@@ -1,4 +1,4 @@
-package com.packetanalyzer;
+package com.inspectra;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -69,7 +69,7 @@ public class PcapReader {
             globalHeader.snaplen = bb.getInt() & 0xFFFFFFFFL;
             globalHeader.network = bb.getInt() & 0xFFFFFFFFL;
             
-            System.out.println("Opened PCAP file: " + filename);
+            System.out.println("Inspectra PCAP Reader: Opened file: " + filename);
             System.out.println("  Version: " + globalHeader.versionMajor + "." + globalHeader.versionMinor);
             System.out.println("  Snaplen: " + globalHeader.snaplen + " bytes");
             System.out.println("  Link type: " + globalHeader.network + (globalHeader.network == 1 ? " (Ethernet)" : ""));

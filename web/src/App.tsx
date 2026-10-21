@@ -167,7 +167,7 @@ export default function App() {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(filteredPackets, null, 2));
     const dlAnchorElem = document.createElement('a');
     dlAnchorElem.setAttribute('href', dataStr);
-    dlAnchorElem.setAttribute('download', `dpi_export_${Date.now()}.json`);
+    dlAnchorElem.setAttribute('download', `inspectra_export_${Date.now()}.json`);
     dlAnchorElem.click();
   };
 
@@ -191,7 +191,7 @@ export default function App() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `dpi_export_${Date.now()}.csv`);
+    link.setAttribute('download', `inspectra_export_${Date.now()}.csv`);
     link.click();
   };
 
@@ -235,20 +235,20 @@ export default function App() {
           </div>
           <div>
             <h1 className="brand-title">
-              DeepPacket.AI
+              Inspectra
               <span className="engine-tag">DPI v1.0</span>
             </h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
               <span className="status-indicator"></span>
-              <span>Deep Packet Inspection Engine Active</span>
+              <span>Inspectra Deep Packet Inspection Engine Active</span>
             </div>
           </div>
         </div>
 
         <div className="header-meta">
-          <div className="active-file-pill">
+          <div className="active-file-pill" title="Inspectra In-Memory Capture Database">
             <Database size={15} style={{ color: 'var(--cyan-400)' }} />
-            <span>Capture: <strong>{activeFileName}</strong></span>
+            <span>Inspectra DB: <strong>{activeFileName}</strong></span>
             <span style={{ color: 'var(--text-muted)' }}>({packets.length} pkts)</span>
           </div>
         </div>

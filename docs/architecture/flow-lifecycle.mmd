@@ -1,0 +1,20 @@
+%% Inspectra - State Machine Diagram: 5-Tuple Connection Flow Lifecycle
+stateDiagram-v2
+    [*] --> NEW : First Packet Observed (5-Tuple Registered)
+    
+    NEW --> ESTABLISHED : TCP 3-Way Handshake Complete\n(SYN -> SYN-ACK -> ACK)
+    NEW --> CLASSIFIED : Immediate L7 Data Observed (UDP / Pre-handshake)
+    NEW --> BLOCKED : Source IP / Port on Blacklist
+    NEW --> CLOSED : RST Received
+
+    ESTABLISHED --> CLASSIFIED : Payload Dissected\n(TLS SNI / HTTP Host / DNS Extracted)
+    ESTABLISHED --> BLOCKED : Policy Deny Triggered\n(IP / Port Match)
+    ESTABLISHED --> CLOSED : RST Received / FIN Handshake Initiated
+
+    CLASSIFIED --> BLOCKED : Classified App / Domain on Blacklist\n(e.g., YouTube, *.tiktok.com)
+    CLASSIFIED --> CLOSED : Normal Teardown (FIN + ACK) OR TCP RST
+    
+    BLOCKED --> BLOCKED : Future Packets Dropped (Action: DROP)
+    BLOCKED --> CLOSED : TCP RST / Connection Teardown
+
+    CLOSED --> [*] : Connection Evicted\n(cleanupStale Timeout > 300s OR LRU Eviction)

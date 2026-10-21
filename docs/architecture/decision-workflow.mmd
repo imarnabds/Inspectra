@@ -1,0 +1,63 @@
+%% Inspectra - Activity Diagram: Detection & Decision Workflow
+graph TD
+    Start(["Raw Packet Ingested"]) --> CheckPCAP{"Valid PCAP\nPacket Header?"}
+    CheckPCAP -- No --> LogCorrupt["Log Parse Error / Skip Frame"] --> EndBad(["Discard Frame"])
+    CheckPCAP -- Yes --> CheckL2{"EtherType ==\n0x0800 (IPv4)?"}
+    
+    CheckL2 -- No (ARP / IPv6) --> LogNonIP["Record L2 Non-IPv4 Frame"] --> RenderL2Only["Render Basic L2 Record"] --> FinishPass(["Forward / Retain"])
+    CheckL2 -- Yes --> ParseL3["Parse IPv4: Extract Src/Dst IP, TTL, Proto"]
+    
+    ParseL3 --> CheckProto{"Transport\nProtocol?"}
+    
+    CheckProto -- TCP (6) --> ParseTCP["Extract Ports, Seq, Ack, Flags\n(SYN, ACK, PSH, FIN, RST, URG)"]
+    CheckProto -- UDP (17) --> ParseUDP["Extract Ports & Datagram Length"]
+    CheckProto -- Other (ICMP, IGMP) --> FallbackL3["Classify as L3 Network Traffic"]
+    
+    ParseTCP --> CheckPayload{"Payload Length\n> 0?"}
+    ParseUDP --> CheckPayload
+    FallbackL3 --> EvalRules
+    
+    CheckPayload -- No --> CheckAnom{"Is TCP SYN Only\nfrom Blacklisted IP?"}
+    CheckPayload -- Yes --> InspectDPI{"Inspect L7 Payload"}
+    
+    InspectDPI -->|"Port 443 / 0x16 Handshake"| ParseSNI["Walk TLS Extensions (0x0000)\nExtract SNI Hostname"]
+    InspectDPI -->|"Port 80 / ASCII Verb"| ParseHTTP["Scan 'Host:' Header\nExtract HTTP Domain"]
+    InspectDPI -->|"Port 53 / DNS Header"| ParseDNS["Unpack Label Lengths\nExtract DNS Query Domain"]
+    InspectDPI -->|"Port 443 / QUIC Long Hdr"| ParseQUIC["Search CRYPTO Frame\nExtract QUIC SNI"]
+    InspectDPI -->|"Other / Encrypted Stream"| PortFallback["Port Fallback Classification"]
+    
+    ParseSNI --> ClassifyApp["Map Hostname to 16+ Known Services\n(Google, YouTube, Meta, etc.)"]
+    ParseHTTP --> ClassifyApp
+    ParseDNS --> ClassifyApp
+    ParseQUIC --> ClassifyApp
+    PortFallback --> ClassifyApp
+    
+    ClassifyApp --> CheckAnom
+    
+    CheckAnom -- Yes (e.g. 192.168.1.50) --> FlagAnomaly["Security Engine: Tag as Threat / SYN Flood"] --> EvalRules
+    CheckAnom -- No --> EvalRules["Policy Engine (RuleManager Priority Check)"]
+    
+    EvalRules --> RuleIP{"1. Source IP\nBlocked?"}
+    RuleIP -- Yes --> DropAction["Action: DROP (Reason: Blocked IP)"]
+    RuleIP -- No --> RulePort{"2. Dst Port\nBlocked?"}
+    
+    RulePort -- Yes --> DropActionPort["Action: DROP (Reason: Blocked Port)"]
+    RulePort -- No --> RuleApp{"3. Identified App\nBlocked?"}
+    
+    RuleApp -- Yes --> DropActionApp["Action: DROP (Reason: Blocked App)"]
+    RuleApp -- No --> RuleDomain{"4. Domain Matches\nPattern / Exact?"}
+    
+    RuleDomain -- Yes --> DropActionDom["Action: DROP (Reason: Blocked Domain)"]
+    RuleDomain -- No --> AllowAction["Action: FORWARD (Pass Policy)"]
+    
+    DropAction --> UpdateConnBlocked["Update ConnectionTracker: BLOCKED"]
+    DropActionPort --> UpdateConnBlocked
+    DropActionApp --> UpdateConnBlocked
+    DropActionDom --> UpdateConnBlocked
+    UpdateConnBlocked --> LogDrop["Emit Security Alert / Drop Event"] --> EndDrop(["Packet Filtered Out"])
+    
+    AllowAction --> WritePCAP["Write to Output PCAP File (C++)"]
+    WritePCAP --> UpdateUI["Update InspectraDB / Render to Web Grid"]
+    RenderL2Only --> UpdateUI
+    EndDrop --> UpdateUI
+    UpdateUI --> EndSuccess(["Inspection Cycle Complete"])

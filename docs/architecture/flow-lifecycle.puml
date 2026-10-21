@@ -1,0 +1,24 @@
+@startuml
+!theme plain
+title Inspectra - Flow Lifecycle State Machine
+
+[*] --> NEW : First Packet Observed (5-Tuple Registered)
+
+NEW --> ESTABLISHED : 3-Way Handshake (SYN -> SYN-ACK -> ACK)
+NEW --> CLASSIFIED : Immediate L7 Data (UDP / Pre-handshake)
+NEW --> BLOCKED : Source IP / Port on Blacklist
+NEW --> CLOSED : RST Received
+
+ESTABLISHED --> CLASSIFIED : Payload Dissected (TLS SNI / HTTP / DNS)
+ESTABLISHED --> BLOCKED : Policy Deny Triggered
+ESTABLISHED --> CLOSED : RST Received / FIN Handshake
+
+CLASSIFIED --> BLOCKED : App / Domain Blacklisted
+CLASSIFIED --> CLOSED : Normal Teardown (FIN + ACK) or RST
+
+BLOCKED --> BLOCKED : Future Packets Dropped
+BLOCKED --> CLOSED : TCP RST Received
+
+CLOSED --> [*] : Stale Timeout (> 300s) or LRU Eviction
+
+@enduml

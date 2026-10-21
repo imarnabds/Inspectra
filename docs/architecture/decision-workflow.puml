@@ -1,0 +1,58 @@
+@startuml
+!theme plain
+title Inspectra - Decision & Detection Workflow
+
+start
+:Raw Packet Ingested;
+if (Valid PCAP Header?) then (yes)
+    if (EtherType == 0x0800 IPv4?) then (yes)
+        :Parse IPv4 Header (TTL, Src/Dst IP);
+        if (Protocol == TCP or UDP?) then (yes)
+            :Parse Transport Layer;
+            if (Payload Length > 0?) then (yes)
+                :Inspect L7 Payload;
+                if (TLS Client Hello?) then (yes)
+                    :Extract TLS SNI;
+                elseif (HTTP Verb?) then (yes)
+                    :Extract HTTP Host;
+                elseif (DNS Port 53?) then (yes)
+                    :Extract DNS Domain;
+                endif
+                :Classify App (16+ Services);
+            endif
+            if (SYN Flood or Blocked Source IP?) then (yes)
+                :Flag Security Threat / Anomaly;
+            endif
+            
+            ' Priority Policy Evaluation
+            if (Source IP in Blocklist?) then (yes)
+                :DROP (Reason: IP);
+                stop
+            elseif (Dst Port in Blocklist?) then (yes)
+                :DROP (Reason: Port);
+                stop
+            elseif (App in Blocklist?) then (yes)
+                :DROP (Reason: App);
+                stop
+            elseif (Domain matches Blocklist?) then (yes)
+                :DROP (Reason: Domain Pattern);
+                stop
+            else (no)
+                :FORWARD (Allowed);
+                :Update Metrics & Write Output;
+                stop
+            endif
+        else (no)
+            :Pass Non-TCP/UDP IP Traffic;
+            stop
+        endif
+    else (no)
+        :Pass Non-IPv4 Frame (ARP/IPv6);
+        stop
+    endif
+else (no)
+    :Log Parse Error & Skip Frame;
+    stop
+endif
+
+@enduml

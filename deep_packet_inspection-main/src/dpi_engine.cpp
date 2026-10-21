@@ -16,7 +16,7 @@ DPIEngine::DPIEngine(const Config& config)
     
     std::cout << "\n";
     std::cout << "╔══════════════════════════════════════════════════════════════╗\n";
-    std::cout << "║                    DPI ENGINE v1.0                            ║\n";
+    std::cout << "║               INSPECTRA DPI ENGINE v1.0                      ║\n";
     std::cout << "║               Deep Packet Inspection System                   ║\n";
     std::cout << "╠══════════════════════════════════════════════════════════════╣\n";
     std::cout << "║ Configuration:                                                ║\n";
@@ -168,7 +168,7 @@ bool DPIEngine::processFile(const std::string& input_file,
 }
 
 void DPIEngine::readerThreadFunc(const std::string& input_file) {
-    PacketAnalyzer::PcapReader reader;
+    Inspectra::PcapReader reader;
     
     if (!reader.open(input_file)) {
         std::cerr << "[Reader] Error: Cannot open input file\n";
@@ -178,15 +178,15 @@ void DPIEngine::readerThreadFunc(const std::string& input_file) {
     // Write PCAP header to output
     writeOutputHeader(reader.getGlobalHeader());
     
-    PacketAnalyzer::RawPacket raw;
-    PacketAnalyzer::ParsedPacket parsed;
+    Inspectra::RawPacket raw;
+    Inspectra::ParsedPacket parsed;
     uint32_t packet_id = 0;
     
     std::cout << "[Reader] Starting packet processing...\n";
     
     while (reader.readNextPacket(raw)) {
         // Parse the packet
-        if (!PacketAnalyzer::PacketParser::parse(raw, parsed)) {
+        if (!Inspectra::PacketParser::parse(raw, parsed)) {
             continue;  // Skip unparseable packets
         }
         
@@ -217,8 +217,8 @@ void DPIEngine::readerThreadFunc(const std::string& input_file) {
     reader.close();
 }
 
-PacketJob DPIEngine::createPacketJob(const PacketAnalyzer::RawPacket& raw,
-                                      const PacketAnalyzer::ParsedPacket& parsed,
+PacketJob DPIEngine::createPacketJob(const Inspectra::RawPacket& raw,
+                                      const Inspectra::ParsedPacket& parsed,
                                       uint32_t packet_id) {
     PacketJob job;
     job.packet_id = packet_id;
@@ -303,7 +303,7 @@ void DPIEngine::handleOutput(const PacketJob& job, PacketAction action) {
     output_queue_.push(job);
 }
 
-bool DPIEngine::writeOutputHeader(const PacketAnalyzer::PcapGlobalHeader& header) {
+bool DPIEngine::writeOutputHeader(const Inspectra::PcapGlobalHeader& header) {
     std::lock_guard<std::mutex> lock(output_mutex_);
     
     if (!output_file_.is_open()) return false;
@@ -318,7 +318,7 @@ void DPIEngine::writeOutputPacket(const PacketJob& job) {
     if (!output_file_.is_open()) return;
     
     // Write packet header
-    PacketAnalyzer::PcapPacketHeader pkt_header;
+    Inspectra::PcapPacketHeader pkt_header;
     pkt_header.ts_sec = job.ts_sec;
     pkt_header.ts_usec = job.ts_usec;
     pkt_header.incl_len = job.data.size();

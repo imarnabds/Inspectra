@@ -1,0 +1,61 @@
+@startuml
+!theme plain
+autonumber
+title Inspectra - Packet Processing Sequence
+
+participant "PCAP File" as Input
+participant "PcapReader" as Reader
+participant "PacketParser & DPI" as Parser
+participant "LoadBalancer" as LB
+participant "FastPathProcessor" as FP
+participant "ConnectionTracker" as Tracker
+participant "RuleManager" as Rules
+participant "Output / Dashboard" as Output
+
+Input -> Reader: Read Global Header (24B) & Packet Header (16B)
+Reader -> Parser: parse(RawPacket, ParsedPacket)
+
+activate Parser
+Parser -> Parser: Decode Ethernet II (MAC, EtherType 0x0800)
+Parser -> Parser: Decode IPv4 (IHL, TTL, Protocol, IPs)
+Parser -> Parser: Decode TCP/UDP (Ports, Flags, Seq/Ack)
+
+alt Port 443 & TLS Handshake (0x16)
+    Parser -> Parser: extractTlsSni() -> SNI Hostname
+else Port 80 & HTTP Verb
+    Parser -> Parser: extractHttpHost() -> Host: Header
+else Port 53 & DNS Header
+    Parser -> Parser: extractDnsQuery() -> Domain Sequence
+end
+
+Parser -> Parser: identifyApplication(Domain) -> Service Tag
+Parser --> Reader: ParsedPacket
+deactivate Parser
+
+Reader -> LB: push(PacketJob)
+activate LB
+LB -> LB: FiveTupleHash(5-Tuple) % num_fps
+LB -> FP: Enqueue to FP[k]
+deactivate LB
+
+activate FP
+FP -> Tracker: getOrCreateConnection(5-Tuple)
+Tracker --> FP: Connection*
+FP -> Tracker: updateConnection(bytes, direction)
+FP -> FP: updateTCPState(SYN, ACK, FIN, RST)
+
+FP -> Rules: shouldBlock(src_ip, dst_port, app_type, domain)
+activate Rules
+Rules -> Rules: Check IP -> Port -> App -> Domain Wildcard
+Rules --> FP: nullopt (ALLOW) or BlockReason (DROP)
+deactivate Rules
+
+alt Decision == DROP
+    FP -> Tracker: blockConnection(conn)
+    FP --> Output: Log Security Drop Event
+else Decision == FORWARD
+    FP --> Output: writeOutputPacket() / Update UI Grid
+end
+deactivate FP
+
+@enduml

@@ -1,11 +1,11 @@
-// Simple single-threaded test version
+// Inspectra Simple single-threaded test version
 #include <iostream>
 #include "pcap_reader.h"
 #include "packet_parser.h"
 #include "sni_extractor.h"
 #include "types.h"
 
-using namespace PacketAnalyzer;
+using namespace Inspectra;
 using namespace DPI;
 
 int main(int argc, char* argv[]) {

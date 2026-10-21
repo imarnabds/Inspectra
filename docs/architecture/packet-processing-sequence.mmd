@@ -1,0 +1,62 @@
+%% Inspectra - Sequence Diagram: Packet Processing Pipeline
+sequenceDiagram
+    autonumber
+    participant Input as 📂 PCAP Source / File
+    participant Reader as 📖 PcapReader
+    participant Parser as 🔬 PacketParser & DPI
+    participant LB as ⚖️ LoadBalancer (hash % N)
+    participant FP as ⚡ FastPathProcessor
+    participant Tracker as 🗃️ ConnectionTracker
+    participant Rules as 🛡️ RuleManager
+    participant Output as 💾 Output / Web Studio
+
+    Input->>Reader: Stream bytes (24-byte Global Header)
+    Reader->>Reader: Detect magic (0xa1b2c3d4 / 0xd4c3b2a1) & Endianness
+    
+    loop For Every Packet
+        Input->>Reader: Read 16-byte Packet Header + Payload
+        Reader->>Parser: parse(RawPacket, ParsedPacket)
+        
+        activate Parser
+        Parser->>Parser: Decode L2 Ethernet (MAC, EtherType 0x0800)
+        Parser->>Parser: Decode L3 IPv4 (IHL, TTL, Protocol, IPs)
+        Parser->>Parser: Decode L4 Transport (TCP Flags / UDP Ports)
+        
+        alt TCP Port 443 & TLS Record (0x16)
+            Parser->>Parser: extractTlsSni() -> Server Name Indication
+        else TCP Port 80 & HTTP Verb
+            Parser->>Parser: extractHttpHost() -> Host: Header
+        else UDP Port 53 & DNS Header
+            Parser->>Parser: extractDnsQuery() -> Domain Label Sequence
+        end
+        
+        Parser->>Parser: identifyApplication(Domain) -> Service Tag
+        Parser-->>Reader: ParsedPacket populated
+        deactivate Parser
+
+        Reader->>LB: push(PacketJob)
+        activate LB
+        LB->>LB: FiveTupleHash(src_ip, dst_ip, src_port, dst_port, proto)
+        LB->>FP: Enqueue job to assigned worker FP[k]
+        deactivate LB
+
+        activate FP
+        FP->>Tracker: getOrCreateConnection(5-Tuple)
+        Tracker-->>FP: Connection* (or reverse tuple match)
+        FP->>Tracker: updateConnection(bytes, direction)
+        FP->>FP: updateTCPState(SYN, ACK, FIN, RST)
+
+        FP->>Rules: shouldBlock(src_ip, dst_port, app_type, domain)
+        activate Rules
+        Rules->>Rules: Check IP -> Port -> App -> Domain (Wildcard)
+        Rules-->>FP: nullopt (ALLOW) OR BlockReason (DROP)
+        deactivate Rules
+
+        alt Decision == DROP (Blocked by Policy / Anomaly)
+            FP->>Tracker: blockConnection(conn) -> Action: DROP
+            FP-->>Output: Log Drop Event (Console / Web Anomaly Flag)
+        else Decision == FORWARD (Allowed)
+            FP->>Output: writeOutputPacket(raw_data) / Render to Table
+        end
+        deactivate FP
+    end

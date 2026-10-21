@@ -1,0 +1,75 @@
+%% Inspectra - Deployment Diagram
+graph TB
+    subgraph Host_Environment ["Host Machine (Windows / Linux / macOS)"]
+        subgraph FS ["Local Storage / Artifacts"]
+            PCAP_Raw[("test_dpi.pcap\n(Raw Packet Capture)")]
+            PCAP_Out[("filtered.pcap\n(Post-Inspection Traffic)")]
+            RulesFile[("blocking_rules.txt\n(Persisted Policy Rules)")]
+        end
+
+        subgraph JVM_Runtime ["Java Runtime Environment (JDK 17+ / 21)"]
+            JavaProcess["Process: java com.inspectra.Main\n(Zero-Dependency Binary Parser)"]
+            JavaReaderModule["Module: PcapReader\n(Native Endianness Stream Parser)"]
+            JavaDissectorModule["Module: PacketParser\n(L2-L4 + TLS SNI / HTTP / DNS DPI)"]
+            JavaProcess --> JavaReaderModule
+            JavaProcess --> JavaDissectorModule
+        end
+
+        subgraph CPP_Native_Runtime ["C++ Native Core Process (C++17 / C++20)"]
+            DPIProcess["Process: dpi_engine / dpi_mt\n(Multi-Threaded Real-Time Dissector)"]
+            
+            subgraph Thread_Pool ["Thread Architecture"]
+                ReaderThread["Thread: Reader Thread\n(1x PCAP Disk Streamer)"]
+                LBThreads["Threads: Load Balancers\n(2x LB Threads - 5-Tuple Hashing)"]
+                FPThreads["Threads: FastPath Processors\n(4x FP Worker Threads - DPI & Rules)"]
+            end
+            
+            subgraph Memory_Structures ["Thread-Safe Shared Memory"]
+                FlowTable["ConnectionTracker Table\n(Bidirectional Flow Cache, max 100K)"]
+                RuleStore["RuleManager Store\n(std::shared_mutex Protected)"]
+            end
+
+            DPIProcess --> Thread_Pool
+            DPIProcess --> Memory_Structures
+        end
+
+        subgraph Web_Server ["Dev / Production Web Server"]
+            ViteServer["Node.js / Vite 8 Server\n(Port 5174 - HTTP)"]
+        end
+
+        subgraph Browser_Environment ["Client Web Browser (Chrome / Edge / Firefox)"]
+            subgraph Web_App ["Inspectra Web Studio (React 19 + TypeScript)"]
+                WebParser["Client-side Binary Dissector\n(pcapParser.ts / DataView)"]
+                InspectraDB["InspectraDB In-Memory Store\n(Indexed Fast State)"]
+                UI_Components["UI: Table, KPI Bar, L2-L7 Tree, Hex Dump"]
+                ExportEng["Export Engine: JSON / CSV Generator"]
+            end
+        end
+
+        subgraph Automation_Scripts ["Launch Automation"]
+            BatchScript["launch.bat (Windows CMD)"]
+            PSScript["launch.ps1 (PowerShell)"]
+            PythonGen["generate_test_pcap.py (Python 3.8+)"]
+        end
+    end
+
+    PCAP_Raw --> JavaReaderModule
+    PCAP_Raw --> ReaderThread
+    PCAP_Raw -.->|Drag & Drop / Upload| WebParser
+
+    ReaderThread --> LBThreads
+    LBThreads --> FPThreads
+    FPThreads <--> FlowTable
+    FPThreads <--> RuleStore
+    RulesFile <--> RuleStore
+    FPThreads --> PCAP_Out
+
+    ViteServer -->|Serves Bundle| Web_App
+    WebParser --> InspectraDB
+    InspectraDB --> UI_Components
+    InspectraDB --> ExportEng
+
+    BatchScript --> JavaProcess
+    BatchScript --> ViteServer
+    PSScript --> JavaProcess
+    PythonGen --> PCAP_Raw

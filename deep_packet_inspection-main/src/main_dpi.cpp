@@ -9,8 +9,8 @@ using namespace DPI;
 void printUsage(const char* program) {
     std::cout << R"(
 ╔══════════════════════════════════════════════════════════════╗
-║                    DPI ENGINE v1.0                            ║
-║               Deep Packet Inspection System                   ║
+║               INSPECTRA DPI ENGINE v1.0                      ║
+║               Deep Packet Inspection System                  ║
 ╚══════════════════════════════════════════════════════════════╝
 
 Usage: )" << program << R"( <input.pcap> <output.pcap> [options]

@@ -1,4 +1,4 @@
-package com.packetanalyzer;
+package com.inspectra;
 
 public class PcapGlobalHeader {
     public long magicNumber;    

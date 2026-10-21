@@ -1,4 +1,4 @@
-package com.packetanalyzer;
+package com.inspectra;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -100,11 +100,11 @@ public class Main {
 
     public static void main(String[] args) {
         System.out.println("====================================");
-        System.out.println("  Deep Packet Inspection Analyzer v1.0");
+        System.out.println("  Inspectra - Deep Packet Inspection Analyzer v1.0");
         System.out.println("====================================\n");
         
         if (args.length < 1) {
-            printUsage("com.packetanalyzer.Main");
+            printUsage("com.inspectra.Main");
             return;
         }
         
@@ -164,7 +164,7 @@ public class Main {
         }
         
         System.out.println("\n====================================");
-        System.out.println("Summary & Deep Packet Inspection Statistics:");
+        System.out.println("Summary & Inspectra Deep Packet Inspection Statistics:");
         System.out.println("  Total packets read:     " + packetCount);
         System.out.println("  TCP Packets:            " + tcpCount);
         System.out.println("  UDP Packets:            " + udpCount);
@@ -178,7 +178,5 @@ public class Main {
             }
         }
         System.out.println("====================================");
-        
-        reader.close();
     }
 }

@@ -22,7 +22,7 @@
 #include "sni_extractor.h"
 #include "types.h"
 
-using namespace PacketAnalyzer;
+using namespace Inspectra;
 using namespace DPI;
 
 // =============================================================================
@@ -589,8 +589,8 @@ private:
 // =============================================================================
 void printUsage(const char* prog) {
     std::cout << R"(
-DPI Engine v2.0 - Multi-threaded Deep Packet Inspection
-========================================================
+Inspectra DPI Engine v2.0 - Multi-threaded Deep Packet Inspection
+=================================================================
 
 Usage: )" << prog << R"( <input.pcap> <output.pcap> [options]
 

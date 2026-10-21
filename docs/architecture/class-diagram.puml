@@ -1,0 +1,161 @@
+@startuml
+!theme plain
+title Inspectra - Class Diagram
+
+package "Java Core Engine" {
+    class PcapGlobalHeader {
+        +long magicNumber
+        +int versionMajor
+        +int versionMinor
+        +int thiszone
+        +long sigfigs
+        +long snaplen
+        +long network
+    }
+
+    class PcapPacketHeader {
+        +long tsSec
+        +long tsUsec
+        +long inclLen
+        +long origLen
+    }
+
+    class RawPacket {
+        +PcapPacketHeader header
+        +byte[] data
+        +RawPacket()
+    }
+
+    class ParsedPacket {
+        +long timestampSec
+        +long timestampUsec
+        +String srcMac
+        +String destMac
+        +int etherType
+        +boolean hasIp
+        +int ipVersion
+        +String srcIp
+        +String destIp
+        +int protocol
+        +int ttl
+        +boolean hasTcp
+        +boolean hasUdp
+        +int srcPort
+        +int destPort
+        +int tcpFlags
+        +long seqNumber
+        +long ackNumber
+        +int payloadLength
+        +byte[] payloadData
+        +String appType
+        +String sni
+        +String httpHost
+        +String dnsQuery
+    }
+
+    class PcapReader {
+        -FileInputStream fis
+        -PcapGlobalHeader globalHeader
+        -boolean needsByteSwap
+        -ByteOrder fileByteOrder
+        +open(String filename): boolean
+        +close(): void
+        +readNextPacket(RawPacket packet): boolean
+    }
+
+    class PacketParser {
+        +{static} parse(RawPacket raw, ParsedPacket parsed): boolean
+        +{static} extractTlsSni(byte[] payload, int length): String
+        +{static} extractHttpHost(byte[] payload, int length): String
+        +{static} extractDnsQuery(byte[] payload, int length): String
+        +{static} identifyApplication(String domainOrHost): String
+    }
+
+    RawPacket *-- PcapPacketHeader
+    PcapReader ..> RawPacket : populates
+    PcapReader ..> PcapGlobalHeader : decodes
+    PacketParser ..> RawPacket : reads
+    PacketParser ..> ParsedPacket : populates
+}
+
+package "C++ High-Performance Engine" {
+    class FiveTuple {
+        +uint32_t src_ip
+        +uint32_t dst_ip
+        +uint16_t src_port
+        +uint16_t dst_port
+        +uint8_t protocol
+        +reverse(): FiveTuple
+        +toString(): string
+    }
+
+    class Connection {
+        +FiveTuple tuple
+        +ConnectionState state
+        +PacketAction action
+        +time_point first_seen
+        +time_point last_seen
+        +uint64_t packets_out
+        +uint64_t bytes_out
+        +uint64_t packets_in
+        +uint64_t bytes_in
+        +AppType app_type
+        +string sni
+        +bool syn_seen
+        +bool syn_ack_seen
+        +bool fin_seen
+    }
+
+    class ConnectionTracker {
+        -int fp_id_
+        -size_t max_connections_
+        -unordered_map<FiveTuple, Connection> connections_
+        +getOrCreateConnection(FiveTuple tuple): Connection*
+        +getConnection(FiveTuple tuple): Connection*
+        +updateConnection(Connection* conn, size_t size, bool outbound): void
+        +classifyConnection(Connection* conn, AppType app, string sni): void
+        +blockConnection(Connection* conn): void
+        +cleanupStale(seconds timeout): size_t
+    }
+
+    class RuleManager {
+        -unordered_set<uint32_t> blocked_ips_
+        -unordered_set<AppType> blocked_apps_
+        -unordered_set<string> blocked_domains_
+        -vector<string> domain_patterns_
+        -unordered_set<uint16_t> blocked_ports_
+        +blockIP(string ip): void
+        +blockApp(AppType app): void
+        +blockDomain(string domain): void
+        +blockPort(uint16_t port): void
+        +shouldBlock(uint32_t ip, uint16_t port, AppType app, string domain): optional<BlockReason>
+        +saveRules(string filename): boolean
+        +loadRules(string filename): boolean
+    }
+
+    class FastPathProcessor {
+        -int fp_id_
+        -ConnectionTracker conn_tracker_
+        -RuleManager* rule_manager_
+        +processPacket(PacketJob job): PacketAction
+        +inspectPayload(PacketJob job, Connection* conn): void
+        +checkRules(PacketJob job, Connection* conn): PacketAction
+        +updateTCPState(Connection* conn, uint8_t flags): void
+    }
+
+    class DPIEngine {
+        -Config config_
+        +start(): void
+        +stop(): void
+        +readerThreadFunc(string input_file): void
+        +writeOutputPacket(PacketJob job): void
+    }
+
+    Connection *-- FiveTuple
+    ConnectionTracker *-- Connection
+    FastPathProcessor *-- ConnectionTracker
+    FastPathProcessor o-- RuleManager
+    DPIEngine *-- FastPathProcessor
+}
+
+@enduml

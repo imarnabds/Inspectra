@@ -12,7 +12,7 @@
 #include "sni_extractor.h"
 #include "types.h"
 
-using namespace PacketAnalyzer;
+using namespace Inspectra;
 using namespace DPI;
 
 // Simplified connection tracking
@@ -77,8 +77,8 @@ private:
 
 void printUsage(const char* prog) {
     std::cout << R"(
-DPI Engine - Deep Packet Inspection System
-==========================================
+Inspectra DPI Engine - Deep Packet Inspection System
+===================================================
 
 Usage: )" << prog << R"( <input.pcap> <output.pcap> [options]
 

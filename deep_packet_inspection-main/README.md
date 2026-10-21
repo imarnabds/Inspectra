@@ -1,4 +1,4 @@
-# DeepPacket.AI — Deep Packet Inspection (DPI) & Network Protocol Studio
+# Inspectra — Deep Packet Inspection (DPI) & Network Protocol Studio
 
 A high-performance Network Packet Analyzer and Deep Packet Inspection (DPI) suite designed to parse raw PCAP captures, decode multi-layer protocol headers, extract Layer-7 application metadata (TLS SNI, HTTP Host, DNS queries), and classify network traffic with security anomaly detection.
 
@@ -71,8 +71,8 @@ Or with custom packet count or capture path:
 Compile and run the Java engine directly:
 ```cmd
 cd deep_packet_inspection-main
-javac -d src/main/java src/main/java/com/packetanalyzer/*.java
-java -cp src/main/java com.packetanalyzer.Main test_dpi.pcap
+javac -d src/main/java src/main/java/com/inspectra/*.java
+java -cp src/main/java com.inspectra.Main test_dpi.pcap
 ```
 
 ---
@@ -117,7 +117,7 @@ deep_packet_inspection-main/
 │   ├── generate_test_pcap.py      # Multi-protocol synthetic PCAP generator
 │   ├── test_dpi.pcap              # Default 77-packet test capture
 │   ├── launch.bat                 # Local directory launcher
-│   └── src/main/java/com/packetanalyzer/
+│   └── src/main/java/com/inspectra/
 │       ├── Main.java              # Java CLI entry point & DPI statistics
 │       ├── PacketParser.java      # L2-L4 parsing & L7 SNI/HTTP/DNS dissection
 │       ├── ParsedPacket.java      # Packet data model with DPI fields
@@ -125,7 +125,7 @@ deep_packet_inspection-main/
 │       ├── PcapGlobalHeader.java  # PCAP global header structure
 │       ├── PcapPacketHeader.java  # PCAP packet header structure
 │       └── RawPacket.java         # Raw byte wrapper
-└── web/                           # DeepPacket.AI Web Studio (React + Vite + TypeScript)
+└── web/                           # Inspectra Web Studio (React + Vite + TypeScript)
     ├── package.json               # Frontend dependencies & scripts
     ├── vite.config.ts             # Vite server config (Port 5174)
     ├── src/

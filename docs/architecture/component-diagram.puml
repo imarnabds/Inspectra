@@ -1,0 +1,73 @@
+@startuml
+!theme plain
+title Inspectra - Component Diagram
+
+package "Packet Ingestion" {
+    [PCAP File] as PCAP
+    [generate_test_pcap.py] as PyGen
+    [PcapReader.java] as JavaReader
+    [pcap_reader.cpp] as CPPReader
+    [pcapParser.ts] as TSReader
+    
+    PyGen ..> PCAP : synthesizes
+    PCAP --> JavaReader
+    PCAP --> CPPReader
+    PCAP --> TSReader
+}
+
+package "Multi-Layer Dissection Engine" {
+    [L2/L3 Dissector] as L2L3
+    [L4 Transport Dissector] as L4
+    [TLS SNI Extractor] as TLS
+    [HTTP Host Extractor] as HTTP
+    [DNS Query Extractor] as DNS
+    [QUIC SNI Extractor] as QUIC
+    [Service Classifier] as Classifier
+
+    JavaReader --> L2L3
+    CPPReader --> L2L3
+    TSReader --> L2L3
+
+    L2L3 --> L4
+    L4 --> TLS
+    L4 --> HTTP
+    L4 --> DNS
+    L4 --> QUIC
+
+    TLS --> Classifier
+    HTTP --> Classifier
+    DNS --> Classifier
+    QUIC --> Classifier
+}
+
+package "State Tracking & Policy Enforcement" {
+    [Load Balancer Pool] as LB
+    [Connection Tracker] as Tracker
+    [Rule Manager] as Rules
+    [Security Anomaly Engine] as Anomaly
+
+    CPPReader --> LB
+    LB --> Tracker
+    Classifier --> Tracker
+    Tracker --> Rules
+    L4 --> Anomaly
+}
+
+package "Presentation & Persistence" {
+    [Inspectra Web Studio] as Web
+    [Java CLI Reporter] as CLI
+    [Filtered PCAP Output] as OutPCAP
+    database "InspectraDB In-Memory" as DB
+
+    TSReader --> Web
+    Classifier --> Web
+    Anomaly --> Web
+    Web <--> DB
+
+    JavaReader --> CLI
+    Classifier --> CLI
+
+    Rules --> OutPCAP : forward permitted
+}
+
+@enduml

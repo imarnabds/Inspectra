@@ -1,0 +1,41 @@
+%% Inspectra - Use Case Diagram
+graph LR
+    subgraph Actors
+        Admin["👤 Network Administrator"]
+        Analyst["🕵️ Security Analyst"]
+        Dev["💻 System Operator / Dev"]
+    end
+
+    subgraph Inspectra ["Inspectra DPI & Observability System"]
+        UC1(["Ingest & Parse Binary PCAP (Java / Web / C++)"])
+        UC2(["Dissect Protocol Layers (L2 Ethernet -> L3 IP -> L4 TCP/UDP)"])
+        UC3(["Extract Layer-7 DPI Metadata (TLS SNI, HTTP Host, DNS Query)"])
+        UC4(["Classify Applications (Google, YouTube, Meta, etc.)"])
+        UC5(["Track 5-Tuple Network Flows & TCP States"])
+        UC6(["Evaluate Policy Rules (Block IP, Port, App, Domain)"])
+        UC7(["Filter Filtered Traffic to Output PCAP"])
+        UC8(["Detect Traffic Anomalies (SYN Floods, Spoofed IPs)"])
+        UC9(["Inspect Synchronized Byte-Level Hex / ASCII Dumps"])
+        UC10(["Export Structured Forensics (JSON / CSV)"])
+        UC11(["Generate Multi-Protocol Synthetic Captures"])
+        UC12(["[Planned] Train & Infer Random Forest / KS Drift"])
+    end
+
+    Admin --> UC1
+    Admin --> UC6
+    Admin --> UC7
+    Admin --> UC10
+
+    Analyst --> UC1
+    Analyst --> UC2
+    Analyst --> UC3
+    Analyst --> UC4
+    Analyst --> UC8
+    Analyst --> UC9
+    Analyst --> UC10
+    Analyst -.-> UC12
+
+    Dev --> UC1
+    Dev --> UC5
+    Dev --> UC6
+    Dev --> UC11

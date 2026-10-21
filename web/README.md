@@ -1,32 +1,25 @@
-# React + TypeScript + Vite
+# Inspectra Web Studio
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Modern, interactive Deep Packet Inspection (DPI) & Network Observability Studio built with **React 19**, **TypeScript 6**, **Vite 8**, and **Lucide Icons**.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Wireshark-Grade Packet Table**: Real-time traffic stream with protocol badges (TLS, HTTP, DNS, TCP, UDP, Anomalous).
+- **Inspectra In-Memory Capture Database**: Fast client-side packet storage and indexing for real-time querying and filtering.
+- **Deep Packet Inspector**: Interactive tree dissection covering Layer 2 (Ethernet), Layer 3 (IPv4), Layer 4 (TCP/UDP), and Layer 7 (TLS SNI, HTTP Host, DNS queries).
+- **Synchronized Hex / ASCII Byte Stream**: 16-byte aligned hex view with offset markers and one-click clipboard copy.
+- **Zero-Backend PCAP Ingestion**: Drag and drop any `.pcap` or `.cap` capture file directly into the browser for immediate byte-level dissection.
+- **Data Export**: Export filtered packet datasets to JSON or CSV (`inspectra_export_<timestamp>`).
 
-## React Compiler
+## Getting Started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+# Install dependencies
+npm install
 
-## Expanding the Oxlint configuration
+# Start development server on port 5174
+npm run dev
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+# Build production bundle
+npm run build
 ```
-
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.

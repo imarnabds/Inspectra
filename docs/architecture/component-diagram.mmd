@@ -1,0 +1,76 @@
+%% Inspectra - Component Diagram
+graph TB
+    subgraph Input_Layer ["1. Packet Ingestion Layer"]
+        PCAP_File[("📂 Raw PCAP File\n(Wireshark / tcpdump)")]
+        PyGen["🐍 Python Traffic Generator\n(generate_test_pcap.py)"]
+        PyGen -.->|generates| PCAP_File
+        JavaReader["☕ Java PCAP Reader\n(PcapReader.java)"]
+        CPPReader["⚡ C++ PCAP Reader\n(pcap_reader.cpp)"]
+        TSReader["🌐 Browser DataView Parser\n(pcapParser.ts)"]
+        PCAP_File --> JavaReader
+        PCAP_File --> CPPReader
+        PCAP_File --> TSReader
+    end
+
+    subgraph Dissection_Layer ["2. Multi-Layer Dissection Engine"]
+        L2L3["Layer 2/3 Dissector\n(Ethernet II + IPv4 Header)"]
+        L4["Layer 4 Dissector\n(TCP Flags, Ports, UDP)"]
+        L7_TLS["TLS SNI Extractor\n(Handshake 0x16, Ext 0x0000)"]
+        L7_HTTP["HTTP Host Dissector\n(Host: Header Extraction)"]
+        L7_DNS["DNS Dissector\n(UDP 53 Label Decoder)"]
+        L7_QUIC["QUIC SNI Extractor\n(Initial Packet CRYPTO)"]
+        Classifier["Service Classifier\n(16+ Known Service Dictionary)"]
+
+        JavaReader --> L2L3
+        CPPReader --> L2L3
+        TSReader --> L2L3
+        L2L3 --> L4
+        L4 --> L7_TLS
+        L4 --> L7_HTTP
+        L4 --> L7_DNS
+        L4 --> L7_QUIC
+        L7_TLS --> Classifier
+        L7_HTTP --> Classifier
+        L7_DNS --> Classifier
+        L7_QUIC --> Classifier
+    end
+
+    subgraph Flow_Policy_Layer ["3. State Tracking & Policy Enforcement"]
+        LB["Load Balancer Threads\n(hash(5-Tuple) % num_lbs)"]
+        ConnTracker["Connection Tracker\n(Bidirectional Flow Table + TCP State)"]
+        RuleMgr["Rule Manager\n(Thread-Safe IP, Port, App, Domain Filter)"]
+        AnomalyDet["Security Anomaly Engine\n(SYN Flood / Threat Flagging)"]
+
+        CPPReader --> LB
+        LB --> ConnTracker
+        Classifier --> ConnTracker
+        ConnTracker --> RuleMgr
+        L4 --> AnomalyDet
+    end
+
+    subgraph Planned_ML_Layer ["4. Planned ML & Statistical Analytics"]
+        style Planned_ML_Layer stroke-dasharray: 5 5
+        FeatExt["[Planned] Flow Feature Extractor\n(Packet size variance, IAT, Entropy)"]
+        RF_Model["[Planned] Random Forest Classifier\n(Supervised Traffic Classification)"]
+        KS_Test["[Planned] KS-Distance Detector\n(Empirical CDF Distribution Shift)"]
+        ConnTracker -.-> FeatExt
+        FeatExt -.-> RF_Model
+        FeatExt -.-> KS_Test
+    end
+
+    subgraph Presentation_Layer ["5. Presentation & Storage"]
+        WebStudio["💻 Inspectra Web Studio\n(React 19 + TypeScript + Vite)"]
+        JavaCLI["📋 Java CLI Reporter\n(com.inspectra.Main)"]
+        PcapWriter["💾 Filtered PCAP Output\n(writeOutputPacket)"]
+        InspectraDB[("🗄️ InspectraDB\n(In-Memory State Store)")]
+
+        TSReader --> WebStudio
+        Classifier --> WebStudio
+        AnomalyDet --> WebStudio
+        WebStudio <--> InspectraDB
+
+        JavaReader --> JavaCLI
+        Classifier --> JavaCLI
+
+        RuleMgr -->|"PacketAction::FORWARD"| PcapWriter
+    end
